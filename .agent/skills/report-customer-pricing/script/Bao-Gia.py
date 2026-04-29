@@ -39,15 +39,36 @@ class QuotationConfig:
 # THÔNG TIN ĐƠN HÀNG CỤ THỂ (ĐỂ TRỐNG THEO YÊU CẦU)
 # ============================================================
 PARTNER = {
-    "name": "",
-    "fullname": "",
-    "address": "",
-    "contact": "",
-    "phone": "",
-    "email": "",
+    "name": "ABC",
+    "fullname": "Công ty TNHH 1 Thành Viên ABC",
+    "address": "123 Đường Láng, Hà Nội",
+    "contact": "Anh Tuấn",
+    "phone": "0922111222",
+    "email": "tuan.abc@gmail.com",
 }
 
-REQUESTED_FEATURES = []
+REQUESTED_FEATURES = [
+    "Tích hợp AI xử lý Ngôn ngữ tự nhiên (NLP tiếng Việt)",
+    "Hệ thống đa người dùng (Multi-tenant SaaS)",
+    "Thiết lập CI/CD Pipeline + Docker + Triển khai tự động",
+    "Hệ thống Bảo mật xác thực 2 bước (2FA / OTP)",
+    "Xuất báo cáo PDF / Excel tự động",
+    "Hệ thống Đặt lịch hẹn + Đồng bộ Google Calendar",
+    "Xây dựng Ứng dụng di động (React Native / Flutter)",
+    "Hệ thống Quản lý kho hàng và Tồn kho",
+    "Hệ thống Tìm kiếm toàn văn bản (Full-text Search)",
+    "Tích hợp Bản đồ nâng cao (Tìm đường, Vùng phục vụ)",
+    "Hệ thống Quản lý nhân sự (Chấm công, Lương, Phép)",
+    "Hệ thống Chat nội bộ thời gian thực",
+    "Tính năng Đăng ký nhận tin chuyên sâu",
+    "Hệ thống Blog/Tin tức nâng cao",
+    "Tích hợp Google Search Console chuyên nghiệp",
+    "Tính năng Theo dõi đơn hàng chuyên nghiệp",
+    "Tích hợp AI Chatbot chuyên sâu",
+    "Hệ thống FAQ nâng cao",
+    "Hệ thống Affiliate chuyên sâu",
+    "Tính năng Ví điện tử nội bộ nâng cao"
+]
 
 TERMS = {
     "payment_method": os.getenv('TERMS_PAYMENT', "Thanh toán chuyển khoản hoặc tiền mặt"),
@@ -177,6 +198,66 @@ class QuotationEngine:
             ws.cell(row=r, column=5).value = item['qty']
             ws.cell(row=r, column=6).value = item['price']
             ws.cell(row=r, column=7).value = f"=E{r}*F{r}"
+
+        # Cập nhật thông tin Khách hàng (Partner)
+        ws.cell(row=6, column=3).value = partner.get('fullname', '')
+        ws.cell(row=7, column=3).value = partner.get('address', '')
+        ws.cell(row=8, column=3).value = partner.get('contact', '')
+        ws.cell(row=9, column=3).value = partner.get('phone', '')
+        ws.cell(row=9, column=6).value = partner.get('email', '')
+
+        # Cập nhật thông tin công ty (Header)
+        seller = self.config.MY_COMPANY
+        company_header = (
+            f"TÊN CÔNG TY: {seller['name']}\n"
+            f"Địa chỉ: {seller['address']}\n"
+            f"Điện thoại: {seller['phone']}\n"
+            f"Email: {seller['email']}"
+        )
+        ws.cell(row=2, column=6).value = company_header
+        ws.cell(row=2, column=6).alignment = Alignment(wrap_text=True, vertical='top')
+
+        # Xử lý Logo (Tìm placeholder [LOGO] và thay thế bằng hình ảnh)
+        if os.path.exists(self.config.LOGO_PATH):
+            logo_found = False
+            for r in range(1, 20):  # Logo thường nằm ở phía trên
+                for c in range(1, 10):
+                    cell = ws.cell(row=r, column=c)
+                    val = str(cell.value or "")
+                    if "[LOGO" in val:
+                        cell.value = ""  # Xóa chữ [LOGO]
+                        img = Image(self.config.LOGO_PATH)
+                        
+                        # Tỷ lệ gốc của logo là 372x70 (~5.3)
+                        # Giảm chiều cao xuống 50px để trông nhỏ gọn và cân đối hơn
+                        from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor, AnchorMarker
+                        from openpyxl.utils.units import pixels_to_EMU
+                        from openpyxl.drawing.xdr import XDRPositiveSize2D
+
+                        # Chỉnh độ rộng cột A và B để vừa logo
+                        ws.column_dimensions['A'].width = 12
+                        ws.column_dimensions['B'].width = 25
+
+                        img = Image(self.config.LOGO_PATH)
+                        
+                        # Điều chỉnh kích thước để nằm trọn trong cột A và B
+                        # Tổng độ rộng A+B khoảng 37 units (~260 pixels)
+                        img.width = 240 
+                        img.height = int(240 / (372 / 70)) # Giữ đúng tỷ lệ gốc, height ~ 45
+                        
+                        p2e = pixels_to_EMU
+                        # Tính toán kích thước (ext) và vị trí (marker)
+                        h, w = p2e(img.height), p2e(img.width)
+                        size = XDRPositiveSize2D(w, h)
+                        
+                        # Offset: lề trái 10px, lề trên (căn giữa hàng cao 75 points ~100px) -> offset ~ (100 - 45)/2 = 27px
+                        marker = AnchorMarker(col=c-1, colOff=p2e(10), row=r-1, rowOff=p2e(27))
+                        
+                        img.anchor = OneCellAnchor(_from=marker, ext=size)
+                        ws.add_image(img)
+                        logo_found = True
+                        break
+                if logo_found: break
 
         # Cập nhật Footer
         f_start = footer_orig + extra_needed
