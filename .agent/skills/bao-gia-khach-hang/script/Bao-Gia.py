@@ -8,6 +8,11 @@ from openpyxl.styles import Alignment, Border, Side, Font, PatternFill
 from copy import copy
 from datetime import datetime
 
+from dotenv import load_dotenv
+
+# Load biến môi trường từ .env
+load_dotenv()
+
 # ============================================================
 # CẤU HÌNH HỆ THỐNG
 # ============================================================
@@ -15,19 +20,19 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 class QuotationConfig:
-    TEMPLATE_PATH = 'Bao_Gia_Mau.xlsx'
-    DINH_MUC_PATH = 'Dinh_Muc_Phan_Mem_Full.xlsx'
-    LOGO_PATH = os.path.join('images', 'logo.png')
+    TEMPLATE_PATH = os.getenv('TEMPLATE_PATH', 'Bao_Gia_Mau.xlsx')
+    DINH_MUC_PATH = os.getenv('DINH_MUC_PATH', 'Dinh_Muc_Phan_Mem_Full.xlsx')
+    LOGO_PATH = os.getenv('LOGO_PATH', os.path.join('images', 'logo.png'))
     OUTPUT_DIR = '.'
     
     MY_COMPANY = {
-        "name": "Công ty TNHH Anh Lập trình",
-        "address": "Tòa nhà TechHub, 123 Điện Biên Phủ, Q. Bình Thạnh, TP.HCM",
-        "phone": "0914 972 102",
-        "email": "contact@anh-lap-trinh.com",
-        "bank_name": "Ngân hàng TMCP Vietcombank - Chi nhánh TP.HCM",
-        "bank_account": "0071 0012 3456 789",
-        "bank_holder": "CONG TY TNHH ANH LAP TRINH",
+        "name": os.getenv('MY_COMPANY_NAME', "Công ty TNHH Anh Lập trình"),
+        "address": os.getenv('MY_COMPANY_ADDRESS', ""),
+        "phone": os.getenv('MY_COMPANY_PHONE', ""),
+        "email": os.getenv('MY_COMPANY_EMAIL', ""),
+        "bank_name": os.getenv('MY_COMPANY_BANK_NAME', ""),
+        "bank_account": os.getenv('MY_COMPANY_BANK_ACCOUNT', ""),
+        "bank_holder": os.getenv('MY_COMPANY_BANK_HOLDER', ""),
     }
 
 # ============================================================
@@ -45,11 +50,11 @@ PARTNER = {
 REQUESTED_FEATURES = []
 
 TERMS = {
-    "payment_method": "Thanh toán chuyển khoản hoặc tiền mặt",
-    "delivery_time": "Giao hàng trong vòng 7–14 ngày sau khi đặt cọc",
-    "warranty": "Bảo hành 12 tháng",
-    "note": "Giá trên đã bao gồm thuế VAT 10%",
-    "vat_percent": 10,
+    "payment_method": os.getenv('TERMS_PAYMENT', "Thanh toán chuyển khoản hoặc tiền mặt"),
+    "delivery_time": os.getenv('TERMS_DELIVERY', "Giao hàng trong vòng 7–14 ngày sau khi đặt cọc"),
+    "warranty": os.getenv('TERMS_WARRANTY', "Bảo hành 12 tháng"),
+    "note": os.getenv('TERMS_NOTE', "Giá trên đã bao gồm thuế VAT 10%"),
+    "vat_percent": int(os.getenv('TERMS_VAT_PERCENT', 10)),
 }
 
 # ============================================================
